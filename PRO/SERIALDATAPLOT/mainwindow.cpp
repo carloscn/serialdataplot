@@ -1,3 +1,42 @@
+// Qt for windows   Project.
+/****************************************************************************/
+/*                                                                          */
+/*  @file       : *_main    .cpp                  	                        */
+/*  @Copyright  : Powered by MULTIBEANS ORG rights reserved.                */
+/*  @Revision   : Ver 1.0.                                                  */
+/*  @Data       : 2018.01.04 Realse.                                        */
+/*  @Belong     : PROJECT.                                                  */
+/*  @Git        : https://github.com/lifimlt/serialdataplot.git             */
+/*  **code : (UTF-8) in Windows 10      . Qt 5.8.0 for Windows platform.    */
+/****************************************************************************/
+/*  @Attention:                                                             */
+/*  ---------------------------------------------------------------------   */
+/*  |    Data    |  Behavior |     Offer      |          Content         |  */
+/*  | 2018.01.04 |   create  |Carlos Lopez(M) | ceate the document.      |  */
+/*  ---------------------------------------------------------------------   */
+/*  Email: carlos@mltbns.top                                  MULTIBEANS.   */
+/****************************************************************************/
+/*--------------------------------------------------------------------------*/
+/*    Copyright (C) 2018  POWERED BY MULTIBEANS                             */
+/*                                                                          */
+/*    This program is free software: you can redistribute it and/or modify  */
+
+
+/*    it under the terms of the GNU General Public License as published by  */
+/*    the Free Software Foundation, either version 3 of the License, or     */
+/*    (at your option) any later version.                                   */
+
+/*    This program is distributed in the hope that it will be useful,       */
+
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         */
+/*    GNU General Public License for more details.                          */
+
+/*    You should have received a copy of the GNU General Public License     */
+/*    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
+/*--------------------------------------------------------------------------*/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
