@@ -23,12 +23,15 @@ public:
     QCustomPlot *plot;
     long xcount;
     long xrange;
+public :
+
 
 private slots:
     void on_button_scanDevice_clicked();
     void on_button_startDevice_clicked();
     void on_button_stopDevice_clicked();
     void on_pushButton_clearBrower_clicked();
+    void on_serial_readBuffer_ready();
 
 private:
     Ui::MainWindow *ui;
@@ -38,11 +41,18 @@ private:
     void checkTheDeviceRemove();
     bool nativeEvent(const QByteArray & eventType, void * message, long *result);
 
+private:
     QSerialPort *serialPort;
-    QByteArray rxArray;
+    QByteArray serialReadArray;
     bool serialRead;
     bool allowTheDeviceRefresh;
     QString currentConnectCom;
+    bool bool_packet_done;
+    qint32 qint32_adc_packet_count;
+
+    QString error_left_string;
+    QString error_right_string;
+    QString error_mid_string;
 };
 
 #endif // MAINWINDOW_H

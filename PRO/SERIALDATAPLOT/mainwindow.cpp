@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // 初始化文本信息
     ui->textBrowser->append(tr("--------------------------------------------------------------- "));
     ui->textBrowser->append(tr("SYSTEM: Welcome to use the Simaple Wave Display system!"));
-    ui->textBrowser->append(tr("SYSTEM: The window will remind the message of system and print the orignal GPS signals!"));
+    ui->textBrowser->append(tr("SYSTEM: The window will remind the message of system and print the orignal signals!"));
     ui->textBrowser->append(tr("SYSTEM: notice : Inorder to avoid the software crash, please wait 3 seconds for the system initing."));
     ui->textBrowser->append(tr("---------------------------------------------------------------- "));
 
@@ -60,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
     serialPort->setParity(QSerialPort::NoParity);
     serialPort->setStopBits(QSerialPort::OneStop);
     serialPort->setFlowControl(QSerialPort::NoFlowControl);
-    connect(serialPort,SIGNAL(readyRead()),this,SLOT(RxData()));
+    connect(serialPort,SIGNAL(readyRead()),this,SLOT(on_serial_readBuffer_ready()));
     // 初始化按钮
     ui->button_stopDevice->setEnabled(false);
     ui->button_startDevice->setEnabled(true);
@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     currentConnectCom = tr("NULL");
 
 
-    //  初始化变量
+    // Init QCustomPlot Class
     xcount = 0;
     xrange = 50;
     ui->plot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom)); // period as decimal separator and comma as thousand separator
@@ -80,26 +80,147 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->plot->legend->setBrush(QBrush(QColor(255,255,255,230)));
     // by default, the legend is in the inset layout of the main axis rect. So this is how we access it to change legend placement:
     ui->plot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignBottom|Qt::AlignRight);
-    // 生成数据，画出的是抛物线
     ui->plot->addGraph();
-    // 为坐标轴添加标签
     ui->plot->xAxis->setLabel("x");
     ui->plot->yAxis->setLabel("y");
-    // 设置坐标轴的范围，以看到所有数据
     ui->plot->xAxis->setRange(0, xrange);
-    ui-> plot->yAxis->setRange(0, 50);
+    ui->plot->yAxis->setRange(0, 50);
 
     ui->plot->graph(0)->addData(10,10);
     ui->plot->graph(0)->addData(10,11);
     ui->plot->graph(0)->addData(10,12);
     ui->plot->replot();
+
+
+    bool_packet_done = false;
+    qint32_adc_packet_count = 0;
+    error_mid_string.clear();
+
+    QString temp1 = ".3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416";
+    int head_index_start = temp1.indexOf("###");
+    int head_index_tail = temp1.indexOf("@@@");
+    QString current_string = temp1.mid( head_index_start + 3 ,  head_index_tail - head_index_start - 3 );
+    qDebug() << "head:" << head_index_start ;
+    qDebug() << "tail"  << head_index_tail;
+    qDebug() << current_string;
+    QList<QString> list_adc_datas_string = current_string.split(',');
+
+    qDebug() <<"1:" << list_adc_datas_string.at(0);
+    qDebug() <<"2:" << list_adc_datas_string.at(1);
+    qDebug() <<"3:" << list_adc_datas_string.at(2);
+    qDebug() <<"4:" << list_adc_datas_string.at(3);
+    qDebug() <<"5:" << list_adc_datas_string.at(4);
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+// ###178.5,185.5,456.8,658.3,85.6@@@
+// The serial recieved data slot function.
+void MainWindow::on_serial_readBuffer_ready()
+{
 
+    double adc_packet_datas[5];
+    QString serial_datas_string;
+    QList<QString> list_adc_datas_string;
+
+    int head_index_start;
+    int data_packet_length;
+    int head_index_tail;
+
+    serialReadArray.append( serialPort->readAll() );
+    serial_datas_string = error_mid_string + QString( serialReadArray );
+
+
+    // S1: 提取一个完整的数据 ### ........   @@@
+    // 判断数据是否包含###和@@@和数据两边偏移
+    // .3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416
+    head_index_start = serial_datas_string.indexOf("###");
+    head_index_tail = serial_datas_string.indexOf("@@@");
+    data_packet_length = serial_datas_string.length();
+
+    if( serial_datas_string.contains("###") && serial_datas_string.contains("@@@") ) {
+
+         // 如果###字符不是文字头，则前边有数据
+        if( head_index_start != 0 ) {
+            // 保存左边的字符
+            error_left_string = serial_datas_string.left( head_index_start );
+
+        }
+        // 如果@@@末尾字符不是文字尾，则和右边有数据
+        if( head_index_tail != data_packet_length ) {
+            // 保存右边的字符
+            error_right_string = serial_datas_string.right( head_index_tail );
+        }
+        if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
+            ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
+             return;
+        }
+
+    }
+    // 数据单边左偏移，数据包一定在上一次的接收中
+    // .3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416
+    if( serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) {
+
+        // 和上一次接收的数据组合成一个完整的数据包
+        serial_datas_string = error_right_string + serial_datas_string;
+        if( head_index_tail != data_packet_length ) {
+            // 保存右边的字符
+            error_right_string = serial_datas_string.right( head_index_tail );
+        }
+        if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
+            ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
+             return;
+        }
+    }
+
+    // 数据单边右偏移, 数据包一定在下一次接收中
+    // ###,178.5,185.5,456.8,658.3
+    if( serial_datas_string.contains("###") && !serial_datas_string.contains("@@@") ) {
+        serial_datas_string = serial_datas_string + error_left_string;
+        // 如果###字符不是文字头，则前边有数据
+       if( head_index_start != 0 ) {
+           // 保存左边的字符
+           error_left_string = serial_datas_string.left( head_index_start );
+       }
+       if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
+           ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
+            return;
+       }
+    }
+
+    if( !serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) {
+        error_mid_string = serial_datas_string;
+        return;
+    }
+
+    // 提取###和@@@中间的数
+    QString current_string = serial_datas_string.mid( head_index_start + 3,  head_index_tail - head_index_start - 3);
+
+    list_adc_datas_string = current_string.split(',');
+    adc_packet_datas[0] = list_adc_datas_string.at(1).toDouble();
+    adc_packet_datas[1] = list_adc_datas_string.at(2).toDouble();
+    adc_packet_datas[2] = list_adc_datas_string.at(3).toDouble();
+    adc_packet_datas[3] = list_adc_datas_string.at(4).toDouble();
+    adc_packet_datas[4] = list_adc_datas_string.at(5).toDouble();
+    ui->plot->graph(0)->addData(qint32_adc_packet_count + 0, adc_packet_datas[0]);
+    ui->plot->graph(0)->addData(qint32_adc_packet_count + 1, adc_packet_datas[1]);
+    ui->plot->graph(0)->addData(qint32_adc_packet_count + 2, adc_packet_datas[2]);
+    ui->plot->graph(0)->addData(qint32_adc_packet_count + 3, adc_packet_datas[3]);
+    ui->plot->graph(0)->addData(qint32_adc_packet_count + 4, adc_packet_datas[4]);
+    ui->plot->replot();
+    qint32_adc_packet_count += 5 ;
+    bool_packet_done = false;
+
+    if( qint32_adc_packet_count >= 10000 ) {
+        qint32_adc_packet_count = 0;
+        ui->plot->clearGraphs();
+    }
+    // 清除数据
+    serialReadArray.clear();
+}
 void MainWindow::refreshTheDeviceList()
 {
     QString portName;

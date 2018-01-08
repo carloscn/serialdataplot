@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.2.1, 2018-01-08T14:06:44. -->
+<!-- Written by QtCreator 4.2.1, 2018-01-04T20:15:13. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
-  <value type="QByteArray">{616296eb-9bd2-4343-8898-fd07260c5688}</value>
+  <value type="QByteArray">{a0fca3b2-15e4-405f-86ef-8e0c25a244ae}</value>
  </data>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -285,8 +285,8 @@
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">SERIALDATAPLOT</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">SERIALDATAPLOT2</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/workspace/Qt/serialdataplot/PRO/SERIALDATAPLOT/SERIALDATAPLOT.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/Workspace/QT/SERIALDATAPLOT_QT_FOR_WINDOWS/PRO/SERIALDATAPLOT/SERIALDATAPLOT.pro</value>
     <value type="bool" key="QmakeProjectManager.QmakeRunConfiguration.UseLibrarySearchPath">true</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments"></value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">SERIALDATAPLOT.pro</value>
