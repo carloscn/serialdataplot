@@ -89,11 +89,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // 设置坐标轴的范围，以看到所有数据
     ui->plot->xAxis->setRange(0, xrange);
     ui-> plot->yAxis->setRange(0, 50);
-    //ui->plot->graph(0)->setBrush(QBrush(QColor(240, 255, 200)));
-    ui->plot->graph(0)->setPen(QPen(Qt::red));
     qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
     for(int i; i < 500; i ++ ) {
-        ui->plot->graph(0)->addData(i,6*sin(2*i*0.1) + 10 +  0.1*(qrand()%10));
+        ui->plot->graph(0)->addData(i,6*sin(2*i*0.1) + 10 +  0.1*qrand()%10);
     }
     ui->plot->replot();
 }
