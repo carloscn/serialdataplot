@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Init QCustomPlot Class
     xcount = 0;
-    xrange = 50;
+    xrange = 500;
     ui->plot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom)); // period as decimal separator and comma as thousand separator
     ui->plot->legend->setVisible(true);
     QFont legendFont = font();  // start out with MainWindow's font..
@@ -81,21 +81,21 @@ MainWindow::MainWindow(QWidget *parent) :
     // by default, the legend is in the inset layout of the main axis rect. So this is how we access it to change legend placement:
     ui->plot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignBottom|Qt::AlignRight);
     ui->plot->addGraph();
-    ui->plot->xAxis->setLabel("x");
-    ui->plot->yAxis->setLabel("y");
+    ui->plot->xAxis->setLabel("points(n)");
+    ui->plot->yAxis->setLabel("ADC Signal Magtitude");
     ui->plot->xAxis->setRange(0, xrange);
-    ui->plot->yAxis->setRange(0, 50);
-
-    ui->plot->graph(0)->addData(10,10);
-    ui->plot->graph(0)->addData(10,11);
-    ui->plot->graph(0)->addData(10,12);
+    ui->plot->yAxis->setRange(0, 500);
     ui->plot->replot();
 
 
     bool_packet_done = false;
     qint32_adc_packet_count = 0;
     error_mid_string.clear();
-
+    error_left_string.clear();
+    error_right_string.clear();
+    double_adc_max_data = 500;
+    double_adc_min_data = 0;
+#if 0
     QString temp1 = ".3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416";
     int head_index_start = temp1.indexOf("###");
     int head_index_tail = temp1.indexOf("@@@");
@@ -110,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qDebug() <<"3:" << list_adc_datas_string.at(2);
     qDebug() <<"4:" << list_adc_datas_string.at(3);
     qDebug() <<"5:" << list_adc_datas_string.at(4);
-
+#endif
 }
 
 MainWindow::~MainWindow()
@@ -132,7 +132,7 @@ void MainWindow::on_serial_readBuffer_ready()
 
     serialReadArray.append( serialPort->readAll() );
     serial_datas_string = error_mid_string + QString( serialReadArray );
-
+    qDebug() << "rec:" << serial_datas_string;
 
     // S1: 提取一个完整的数据 ### ........   @@@
     // 判断数据是否包含###和@@@和数据两边偏移
@@ -181,16 +181,16 @@ void MainWindow::on_serial_readBuffer_ready()
     if( serial_datas_string.contains("###") && !serial_datas_string.contains("@@@") ) {
         serial_datas_string = serial_datas_string + error_left_string;
         // 如果###字符不是文字头，则前边有数据
-       if( head_index_start != 0 ) {
-           // 保存左边的字符
-           error_left_string = serial_datas_string.left( head_index_start );
-       }
+        if( head_index_start != 0 ) {
+            // 保存左边的字符
+            error_left_string = serial_datas_string.left( head_index_start );
+        }
        if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
            ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
             return;
        }
-    }
 
+    }
     if( !serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) {
         error_mid_string = serial_datas_string;
         return;
@@ -205,6 +205,7 @@ void MainWindow::on_serial_readBuffer_ready()
     adc_packet_datas[2] = list_adc_datas_string.at(3).toDouble();
     adc_packet_datas[3] = list_adc_datas_string.at(4).toDouble();
     adc_packet_datas[4] = list_adc_datas_string.at(5).toDouble();
+
     ui->plot->graph(0)->addData(qint32_adc_packet_count + 0, adc_packet_datas[0]);
     ui->plot->graph(0)->addData(qint32_adc_packet_count + 1, adc_packet_datas[1]);
     ui->plot->graph(0)->addData(qint32_adc_packet_count + 2, adc_packet_datas[2]);
@@ -214,13 +215,52 @@ void MainWindow::on_serial_readBuffer_ready()
     qint32_adc_packet_count += 5 ;
     bool_packet_done = false;
 
-    if( qint32_adc_packet_count >= 10000 ) {
-        qint32_adc_packet_count = 0;
-        ui->plot->clearGraphs();
+    // 横坐标自动适配
+    if( qint32_adc_packet_count % 500 == 0 ) {
+        xrange += 500;
+        ui->plot->xAxis->setRange(xrange - 500, xrange);
+        ui->plot->replot();
     }
+    // 纵坐标自动适配
+    if( minValue( adc_packet_datas ) <= double_adc_min_data ) {
+        double_adc_min_data = minValue( adc_packet_datas );
+        ui->plot->yAxis->setRange(double_adc_min_data - 50, double_adc_max_data + 50 );
+        ui->plot->replot();
+    }
+    if( maxValue( adc_packet_datas ) >= double_adc_max_data ) {
+        double_adc_max_data = maxValue( adc_packet_datas );
+        ui->plot->yAxis->setRange(double_adc_min_data - 50 , double_adc_max_data + 50 );
+        ui->plot->replot();
+    }
+    qDebug() << "maxValue :" << maxValue( adc_packet_datas );
+    qDebug() << "minValue :" << minValue( adc_packet_datas );
     // 清除数据
     serialReadArray.clear();
 }
+
+double MainWindow::maxValue( double *data )
+{
+    double max = 0;
+    max = *(data);
+    for( int i = 0; i < 5; i++ ) {
+        if( *(data + i) > max ) {
+            max = *(data + i);
+        }
+    }
+    return max;
+}
+double MainWindow::minValue( double *data )
+{
+    double min = 0;
+    min = *(data);
+    for( int i = 0; i < 5; i++ ) {
+        if( *(data + i) < min ) {
+            min = *(data + i);
+        }
+    }
+    return min;
+}
+
 void MainWindow::refreshTheDeviceList()
 {
     QString portName;

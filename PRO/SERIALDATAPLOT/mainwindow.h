@@ -24,8 +24,8 @@ public:
     long xcount;
     long xrange;
 public :
-
-
+    double maxValue( double *data );
+    double minValue( double *data );
 private slots:
     void on_button_scanDevice_clicked();
     void on_button_startDevice_clicked();
@@ -53,6 +53,8 @@ private:
     QString error_left_string;
     QString error_right_string;
     QString error_mid_string;
+    double double_adc_max_data;
+    double double_adc_min_data;
 };
 
 #endif // MAINWINDOW_H
