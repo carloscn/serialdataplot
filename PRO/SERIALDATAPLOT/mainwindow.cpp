@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // 初始化串口
     serialPort = new QSerialPort;
-    serialPort->setBaudRate(QSerialPort::Baud115200);
+    serialPort->setBaudRate(QSerialPort::Baud9600);
     serialPort->setDataBits(QSerialPort::Data8);
     serialPort->setParity(QSerialPort::NoParity);
     serialPort->setStopBits(QSerialPort::OneStop);
