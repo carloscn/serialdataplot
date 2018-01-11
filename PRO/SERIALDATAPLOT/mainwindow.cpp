@@ -3,7 +3,7 @@
 /*                                                                          */
 /*  @file       : *_main    .cpp                  	                        */
 /*  @Copyright  : Powered by MULTIBEANS ORG rights reserved.                */
-/*  @Revision   : Ver 1.0.                                                  */
+/*  @Revision   : Ver 1.1.                                                  */
 /*  @Data       : 2018.01.04 Realse.                                        */
 /*  @Belong     : PROJECT.                                                  */
 /*  @Git        : https://github.com/lifimlt/serialdataplot.git             */
