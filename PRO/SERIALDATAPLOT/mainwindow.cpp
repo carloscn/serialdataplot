@@ -128,123 +128,78 @@ MainWindow::~MainWindow()
 }
 // ###178.5,185.5,456.8,658.3,85.6@@@
 // The serial recieved data slot function.
+// #178.5,8888,8888,8888,8888@
 void MainWindow::on_serial_readBuffer_ready()
 {
-
+    QByteArray serial_read_array;
     double adc_packet_datas[5];
     QString serial_datas_string;
     QList<QString> list_adc_datas_string;
-
-    int head_index_start;
-    int data_packet_length;
-    int head_index_tail;
-
-    serialReadArray.append( serialPort->readAll() );
-    serial_datas_string = error_mid_string + QString( serialReadArray );
     qDebug() << "rec:" << serial_datas_string;
 
-    // S1: 提取一个完整的数据 ### ........   @@@
-    // 判断数据是否包含###和@@@和数据两边偏移
-    // .3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416
-    head_index_start = serial_datas_string.indexOf("###");
-    head_index_tail = serial_datas_string.indexOf("@@@");
-    data_packet_length = serial_datas_string.length();
+    serial_read_array = serialPort->readAll();
+    serial_datas_string = QString( serialReadArray );
 
-    if( serial_datas_string.contains("###") && serial_datas_string.contains("@@@") ) {
-
-         // 如果###字符不是文字头，则前边有数据
-        if( head_index_start != 0 ) {
-            // 保存左边的字符
-            error_left_string = serial_datas_string.left( head_index_start );
-
-        }
-        // 如果@@@末尾字符不是文字尾，则和右边有数据
-        if( head_index_tail != data_packet_length ) {
-            // 保存右边的字符
-            error_right_string = serial_datas_string.right( head_index_tail );
-        }
-        if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
-            ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
-             return;
-        }
-
-    }
-    // 数据单边左偏移，数据包一定在上一次的接收中
-    // .3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416
-    if( serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) {
-
-        // 和上一次接收的数据组合成一个完整的数据包
-        serial_datas_string = error_right_string + serial_datas_string;
-        if( head_index_tail != data_packet_length ) {
-            // 保存右边的字符
-            error_right_string = serial_datas_string.right( head_index_tail );
-        }
-        if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
-            ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
-             return;
+    if( !serial_read_array.isEmpty() ) {
+        serialReadArray.append( serial_read_array );
+        if( serialReadArray.contains("###") && serialReadArray.contains("@@@")  ) {
+            serial_datas_string = serialReadArray.split('@').at(0);
+            if( serial_datas_string.contains("###") ) {
+                serial_datas_string = serial_datas_string.split("###").at(1);
+                bool_packet_done = true;
+                qDebug() << "The packet is : " << serial_datas_string;
+            }
         }
     }
 
-    // 数据单边右偏移, 数据包一定在下一次接收中
-    // ###,178.5,185.5,456.8,658.3
-    if( serial_datas_string.contains("###") && !serial_datas_string.contains("@@@") ) {
-        serial_datas_string = serial_datas_string + error_left_string;
-        // 如果###字符不是文字头，则前边有数据
-        if( head_index_start != 0 ) {
-            // 保存左边的字符
-            error_left_string = serial_datas_string.left( head_index_start );
-        }
-       if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
-           ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
-            return;
-       }
+    if( bool_packet_done == true ) {
 
-    }
-    if( !serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) {
-        error_mid_string = serial_datas_string;
+        list_adc_datas_string = serial_datas_string.split(',');
+        adc_packet_datas[0] = list_adc_datas_string.at(1).toDouble();
+        adc_packet_datas[1] = list_adc_datas_string.at(2).toDouble();
+        adc_packet_datas[2] = list_adc_datas_string.at(3).toDouble();
+        adc_packet_datas[3] = list_adc_datas_string.at(4).toDouble();
+        adc_packet_datas[4] = list_adc_datas_string.at(5).toDouble();
+        qDebug() << "adc 0:" << adc_packet_datas[0];
+        qDebug() << "adc 1:" << adc_packet_datas[1];
+        qDebug() << "adc 2:" << adc_packet_datas[2];
+        qDebug() << "adc 3:" << adc_packet_datas[3];
+        qDebug() << "adc 4:" << adc_packet_datas[4];
+
+        ui->plot->graph(0)->addData(qint32_adc_packet_count + 0, adc_packet_datas[0]);
+        ui->plot->graph(0)->addData(qint32_adc_packet_count + 1, adc_packet_datas[1]);
+        ui->plot->graph(0)->addData(qint32_adc_packet_count + 2, adc_packet_datas[2]);
+        ui->plot->graph(0)->addData(qint32_adc_packet_count + 3, adc_packet_datas[3]);
+        ui->plot->graph(0)->addData(qint32_adc_packet_count + 4, adc_packet_datas[4]);
+        ui->plot->replot();
+        qint32_adc_packet_count += 5 ;
+        bool_packet_done = false;
+
+
+        // 横坐标自动适配
+        if( qint32_adc_packet_count % 500 == 0 ) {
+            xrange += 500;
+            ui->plot->xAxis->setRange(xrange - 500, xrange);
+            ui->plot->replot();
+        }
+        // 纵坐标自动适配
+        if( minValue( adc_packet_datas ) <= double_adc_min_data ) {
+            double_adc_min_data = minValue( adc_packet_datas );
+            ui->plot->yAxis->setRange(double_adc_min_data - 50, double_adc_max_data + 50 );
+            ui->plot->replot();
+        }
+        if( maxValue( adc_packet_datas ) >= double_adc_max_data ) {
+            double_adc_max_data = maxValue( adc_packet_datas );
+            ui->plot->yAxis->setRange(double_adc_min_data - 50 , double_adc_max_data + 50 );
+            ui->plot->replot();
+        }
+        qDebug() << "maxValue :" << maxValue( adc_packet_datas );
+        qDebug() << "minValue :" << minValue( adc_packet_datas );
+        // 清除数据
+        serialReadArray.clear();
+    }else{
         return;
     }
-
-    // 提取###和@@@中间的数
-    QString current_string = serial_datas_string.mid( head_index_start + 3,  head_index_tail - head_index_start - 3);
-
-    list_adc_datas_string = current_string.split(',');
-    adc_packet_datas[0] = list_adc_datas_string.at(1).toDouble();
-    adc_packet_datas[1] = list_adc_datas_string.at(2).toDouble();
-    adc_packet_datas[2] = list_adc_datas_string.at(3).toDouble();
-    adc_packet_datas[3] = list_adc_datas_string.at(4).toDouble();
-    adc_packet_datas[4] = list_adc_datas_string.at(5).toDouble();
-
-    ui->plot->graph(0)->addData(qint32_adc_packet_count + 0, adc_packet_datas[0]);
-    ui->plot->graph(0)->addData(qint32_adc_packet_count + 1, adc_packet_datas[1]);
-    ui->plot->graph(0)->addData(qint32_adc_packet_count + 2, adc_packet_datas[2]);
-    ui->plot->graph(0)->addData(qint32_adc_packet_count + 3, adc_packet_datas[3]);
-    ui->plot->graph(0)->addData(qint32_adc_packet_count + 4, adc_packet_datas[4]);
-    ui->plot->replot();
-    qint32_adc_packet_count += 5 ;
-    bool_packet_done = false;
-
-    // 横坐标自动适配
-    if( qint32_adc_packet_count % 500 == 0 ) {
-        xrange += 500;
-        ui->plot->xAxis->setRange(xrange - 500, xrange);
-        ui->plot->replot();
-    }
-    // 纵坐标自动适配
-    if( minValue( adc_packet_datas ) <= double_adc_min_data ) {
-        double_adc_min_data = minValue( adc_packet_datas );
-        ui->plot->yAxis->setRange(double_adc_min_data - 50, double_adc_max_data + 50 );
-        ui->plot->replot();
-    }
-    if( maxValue( adc_packet_datas ) >= double_adc_max_data ) {
-        double_adc_max_data = maxValue( adc_packet_datas );
-        ui->plot->yAxis->setRange(double_adc_min_data - 50 , double_adc_max_data + 50 );
-        ui->plot->replot();
-    }
-    qDebug() << "maxValue :" << maxValue( adc_packet_datas );
-    qDebug() << "minValue :" << minValue( adc_packet_datas );
-    // 清除数据
-    serialReadArray.clear();
 }
 
 double MainWindow::maxValue( double *data )
