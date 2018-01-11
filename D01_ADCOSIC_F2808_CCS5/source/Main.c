@@ -64,7 +64,7 @@ Uint16 AdcInterruptCount = 0;
 char rxaBuffer[RXA_MAX_COUNT]={0};
 Uint16 SampleTable[BUF_SIZE];
 char charSampleData[];
-
+char* Stoa( Uint16 val, unsigned char* dst, int radix );
 interrupt void SCIA_RX_ISR( void );
 interrupt void ADC_Interrupt( void );
 
@@ -168,7 +168,7 @@ Uint16 SendOnceDataPacket( Uint16 *datas_buffer )
 {
 	Uint16 i;
 	Uint16 data;
-	unsigned char data_char[15];
+	unsigned char *data_char;
 
 
 	ClearBuffer( stringDataSend, sizeof( stringDataSend ) );
@@ -181,9 +181,11 @@ Uint16 SendOnceDataPacket( Uint16 *datas_buffer )
 	// Process five datas, convert them to char.
 	for( i = 0; i < 5; i++ ) {
 		data = *(datas_buffer + i);
-		strcat( stringDataSend, itoa(data) );
+		Stoa(data,data_char,10);
+		strcat( data_char,"," );
+		strcat( stringDataSend,data_char );
 	}
-	strcat( stringDataSend, ",@@@\0" );
+	strcat( stringDataSend, "@@@\r\n\0" );
 	SendDatasByScia( stringDataSend );
 
 	ClearBuffer( stringDataSend, sizeof( stringDataSend ) );
@@ -437,9 +439,9 @@ void intTochar( int _data, char *_str)
 	}
 }
 
-char* itoa( int val, char* dst, int radix )
+char* Stoa( Uint16 val, unsigned char* dst, int radix )
 {
-	char *_pdst = dst;
+	unsigned char *_pdst = dst;
 	if (!val)//ÔÊÐívalµÈÓÚ0
 	{
 		*_pdst = '0';
@@ -451,8 +453,8 @@ char* itoa( int val, char* dst, int radix )
 		*_pdst++ = '-';
 		val = -val;
 	}
-	char *_first = _pdst;
-	char _cov;
+	unsigned char *_first = _pdst;
+	unsigned char _cov;
 	unsigned int _rem;
 	while(val > 0)
 	{
