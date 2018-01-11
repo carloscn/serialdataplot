@@ -147,7 +147,7 @@ void main( void )
 
 
 		SampleTable[ adc_i ]= ( ( AdcRegs.ADCRESULT0 ) >> 4 );
-		if ( adc_i == 4 ) {
+		if ( adc_i >= 4 ) {
 			SendOnceDataPacket( SampleTable );
 			adc_i = 0;
 		}
@@ -160,7 +160,7 @@ void ClearBuffer( unsigned char *buffer, Uint16 length )
 {
 	Uint16 i;
 	for( i = 0; i < length; i++ ) {
-		*(buffer + i) = '/0';
+		*(buffer + i) = '\0';
 	}
 }
 
@@ -168,7 +168,7 @@ Uint16 SendOnceDataPacket( Uint16 *datas_buffer )
 {
 	Uint16 i;
 	Uint16 data;
-	unsigned char data_char[8];
+	unsigned char data_char[15];
 
 
 	ClearBuffer( stringDataSend, sizeof( stringDataSend ) );
@@ -181,8 +181,7 @@ Uint16 SendOnceDataPacket( Uint16 *datas_buffer )
 	// Process five datas, convert them to char.
 	for( i = 0; i < 5; i++ ) {
 		data = *(datas_buffer + i);
-		FloatToASCII( data, data_char );
-		strcat( stringDataSend, data_char );
+		strcat( stringDataSend, itoa(data) );
 	}
 	strcat( stringDataSend, ",@@@\0" );
 	SendDatasByScia( stringDataSend );
@@ -437,3 +436,42 @@ void intTochar( int _data, char *_str)
 		}
 	}
 }
+
+char* itoa( int val, char* dst, int radix )
+{
+	char *_pdst = dst;
+	if (!val)//允许val等于0
+	{
+		*_pdst = '0';
+		*++_pdst = '\0';
+		return dst;
+	}
+	if(val <0)
+	{
+		*_pdst++ = '-';
+		val = -val;
+	}
+	char *_first = _pdst;
+	char _cov;
+	unsigned int _rem;
+	while(val > 0)
+	{
+		_rem = (unsigned int)(val % radix);
+		val /= radix;//每次计算一位 ，从低到高
+		if  (_rem > 9)//16进制
+			*_pdst++ = (char)(_rem - 10 + 'a');
+		else
+			*_pdst++ = (char)(_rem + '0');
+	}
+	*_pdst-- = '\0';
+	do{ //由于数据是地位到高位储存的，需要转换位置
+		_cov = *_pdst;
+		*_pdst = *_first;
+		*_first = _cov;
+		_pdst--;
+		_first++;
+	}while(_first < _pdst);
+	return dst;
+}
+
+
