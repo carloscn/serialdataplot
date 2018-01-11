@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // 初始化串口
     serialPort = new QSerialPort;
-    serialPort->setBaudRate(QSerialPort::Baud9600);
+    serialPort->setBaudRate(QSerialPort::Baud115200);
     serialPort->setDataBits(QSerialPort::Data8);
     serialPort->setParity(QSerialPort::NoParity);
     serialPort->setStopBits(QSerialPort::OneStop);
@@ -159,7 +159,7 @@ void MainWindow::on_serial_readBuffer_ready()
 
         }
         // 如果@@@末尾字符不是文字尾，则和右边有数据
-        if( head_index_tail != data_packet_length ) {
+        if( head_index_tail != data_packet_length - 3) {
             // 保存右边的字符
             error_right_string = serial_datas_string.right( head_index_tail );
         }
