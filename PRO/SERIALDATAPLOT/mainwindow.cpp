@@ -104,6 +104,7 @@ MainWindow::MainWindow(QWidget *parent) :
     error_right_string.clear();
     double_adc_max_data = 500;
     double_adc_min_data = 0;
+    qint64_adc_recevie_count = 0;
 #if 0
     QString temp1 = ".3,888.9,@@@###,178.5,185.5,456.8,658.3,85.6,@@@###,416";
     int head_index_start = temp1.indexOf("###");
@@ -141,6 +142,7 @@ void MainWindow::on_serial_readBuffer_ready()
 
     serialReadArray.append( serialPort->readAll() );
     serial_datas_string = error_mid_string + QString( serialReadArray );
+    qDebug()<< "----------------This is the" << qint64_adc_recevie_count++ << "time to recevie data.----------------";
     qDebug() << "rec:" << serial_datas_string;
 
     // S1: 提取一个完整的数据 ### ........   @@@
@@ -149,19 +151,22 @@ void MainWindow::on_serial_readBuffer_ready()
     head_index_start = serial_datas_string.indexOf("###");
     head_index_tail = serial_datas_string.indexOf("@@@");
     data_packet_length = serial_datas_string.length();
-
+    qDebug() << "head_index_start:" << head_index_start;
+    qDebug() << "head_index_tail:" << head_index_tail;
+    qDebug() << "data_packet_length:" << data_packet_length;
     if( serial_datas_string.contains("###") && serial_datas_string.contains("@@@") ) {
 
          // 如果###字符不是文字头，则前边有数据
         if( head_index_start != 0 ) {
             // 保存左边的字符
             error_left_string = serial_datas_string.left( head_index_start );
-
+            qDebug()<< "The error_left_string is: " << error_left_string;
         }
         // 如果@@@末尾字符不是文字尾，则和右边有数据
         if( head_index_tail != data_packet_length - 3) {
             // 保存右边的字符
             error_right_string = serial_datas_string.right( head_index_tail );
+            qDebug()<< "The error_right_string is: " << error_right_string;
         }
         if( (!serial_datas_string.contains("@@@") && !serial_datas_string.contains("###") ) &&
             ( serial_datas_string.indexOf("###") > serial_datas_string.indexOf("@@@")  )  ) {
