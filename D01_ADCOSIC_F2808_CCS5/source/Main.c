@@ -76,6 +76,7 @@ void intTochar();
 void GPIO_INIT();
 Uint16 SendOnceDataPacket( Uint16 *datas_buffer );
 void ClearBuffer( unsigned char *buffer, Uint16 length );
+void FloatToASCII( float data , unsigned char *buffer);
 
 Uint16 array_index = 0;
 float adc = 0;
@@ -180,7 +181,7 @@ Uint16 SendOnceDataPacket( Uint16 *datas_buffer )
 	// Process five datas, convert them to char.
 	for( i = 0; i < 5; i++ ) {
 		data = *(datas_buffer + i);
-		intTochar( data, data_char );
+		FloatToASCII( data, data_char );
 		strcat( stringDataSend, data_char );
 	}
 	strcat( stringDataSend, ",@@@\0" );
@@ -243,7 +244,68 @@ void ADC_Init()
 
 }
 
+void FloatToASCII( float data , unsigned char *buffer) {
 
+	Uint16 i,j = 1;
+	unsigned char AsciiBuff[14];
+	if( data < 0 ) {
+		data = -data;
+		AsciiBuff[0] = '-';
+	}else{
+		AsciiBuff[0] = '+';
+	}
+	AsciiBuff[1] 	= 	( long ) ( data/10000000 ) % 10 + 0x30;
+	AsciiBuff[2] 	= 	( long ) ( data/1000000 ) % 10 + 0x30;
+	AsciiBuff[3] 	= 	( long ) ( data/100000 ) % 10 + 0x30;
+	AsciiBuff[4] 	= 	( Uint16 ) ( data/10000 ) %10 + 0x30;
+	AsciiBuff[5]	= 	( Uint16 ) ( data/1000 ) %10 + 0x30;
+	AsciiBuff[6] 	= 	( Uint16 ) ( data/100 ) %10 + 0x30;
+	AsciiBuff[7] 	= 	( Uint16 ) ( data/10 ) %10 + 0x30;
+	AsciiBuff[8] 	= 	( Uint16 ) ( (long)( data ) % 10 ) + 0x30;
+	AsciiBuff[9] 	= 	46;
+	AsciiBuff[10] 	= 	( ( long ) ( data * 10 ) % 10 ) + 0x30 ;
+	AsciiBuff[11] 	= 	( ( long ) ( data * 100 ) % 10 ) + 0x30 ;
+	AsciiBuff[12] 	= 	(long)'\0';
+
+	if( AsciiBuff[1] == 48 && AsciiBuff[2] == 48 && AsciiBuff[3] == 48 && AsciiBuff[4]  ==  48
+			&& AsciiBuff[5]  ==  48 && AsciiBuff[6]  ==  48 && AsciiBuff[7]  ==  48     ) {
+		for( i = 1; i < 8; i++ )
+			AsciiBuff[i] = 32;
+	}
+	if( AsciiBuff[6] == 48 && AsciiBuff[1] == 48 && AsciiBuff[2] == 48 && AsciiBuff[3]  ==  48
+			&& AsciiBuff[4]  ==  48 && AsciiBuff[5]  ==  48  ) {
+		for( i = 1; i < 7; i++ )
+			AsciiBuff[i] = 32;
+	}
+	if( AsciiBuff[5] == 48 && AsciiBuff[1] == 48 && AsciiBuff[2] == 48 && AsciiBuff[3]  ==  48
+			&& AsciiBuff[4]  ==  48 ) {
+		for( i = 1; i < 6; i++ )
+			AsciiBuff[i] = 32;
+	}
+	if( AsciiBuff[4] == 48 && AsciiBuff[1] == 48 && AsciiBuff[2] == 48 && AsciiBuff[3]  ==  48  ) {
+		for( i = 1; i < 5; i++ )
+			AsciiBuff[i] = 32;
+	}
+	if( AsciiBuff[3] == 48 && AsciiBuff[1] == 48 && AsciiBuff[2] == 48 ) {
+		AsciiBuff[3] = 32;
+		AsciiBuff[1] = 32;
+		AsciiBuff[2] = 32;
+	}
+	if( AsciiBuff[2] == 48 && AsciiBuff[1] == 48 ) {
+		AsciiBuff[2] = 32;
+		AsciiBuff[1] = 32;
+	}
+	if(AsciiBuff[1] == 48) {
+		AsciiBuff[1] = 32;
+	}
+	for( i = 0; i < 13; i++ ) {
+		if( AsciiBuff[i] != 32 ){
+			*(buffer + j) = AsciiBuff[i];
+			*(buffer + j + 1) = '\0';
+			j++;
+		}
+	}
+}
 
 
 interrupt void SCIA_RX_ISR( void )
