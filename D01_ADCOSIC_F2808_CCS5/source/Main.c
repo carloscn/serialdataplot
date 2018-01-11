@@ -430,7 +430,7 @@ void intTochar( int _data, char *_str)
 	}
 	if(scaleData == 0)
 	{
-		_str[0] = '1';
+		_str[0] = '0';
 	}else{
 		strcat(strlong,str);
 		for (i = 0; i < scaleData; ++i) {
@@ -438,42 +438,3 @@ void intTochar( int _data, char *_str)
 		}
 	}
 }
-
-char* Stoa( Uint16 val, unsigned char* dst, int radix )
-{
-	unsigned char *_pdst = dst;
-	if (!val)//允许val等于0
-	{
-		*_pdst = '0';
-		*++_pdst = '\0';
-		return dst;
-	}
-	if(val <0)
-	{
-		*_pdst++ = '-';
-		val = -val;
-	}
-	unsigned char *_first = _pdst;
-	unsigned char _cov;
-	unsigned int _rem;
-	while(val > 0)
-	{
-		_rem = (unsigned int)(val % radix);
-		val /= radix;//每次计算一位 ，从低到高
-		if  (_rem > 9)//16进制
-			*_pdst++ = (char)(_rem - 10 + 'a');
-		else
-			*_pdst++ = (char)(_rem + '0');
-	}
-	*_pdst-- = '\0';
-	do{ //由于数据是地位到高位储存的，需要转换位置
-		_cov = *_pdst;
-		*_pdst = *_first;
-		*_first = _cov;
-		_pdst--;
-		_first++;
-	}while(_first < _pdst);
-	return dst;
-}
-
-

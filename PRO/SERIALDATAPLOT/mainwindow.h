@@ -55,6 +55,7 @@ private:
     QString error_mid_string;
     double double_adc_max_data;
     double double_adc_min_data;
+    qint64 qint64_adc_recevie_count;
 };
 
 #endif // MAINWINDOW_H
